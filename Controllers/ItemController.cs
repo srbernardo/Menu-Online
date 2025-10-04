@@ -23,14 +23,14 @@ namespace MenuOnline.Controllers
     }
 
     [HttpGet("items")]
-    public async Task<IActionResult> GetAllAsync([FromBody] int userId)
+    public async Task<IActionResult> GetAllAsync(int userId)
     {
       var items = await _context.Items
         .Where(i => i.UserId == userId)
         .AsNoTracking()
         .Select(i => i.ToItemDto(_context))
         .ToListAsync();
-    
+
       return Ok(items);
     }
 
