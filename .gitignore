@@ -96,3 +96,5 @@ yarn-error.log
 
 # Windows Installer
 Thumbs.db
+appsettings.json
+appsettings.Development.json
