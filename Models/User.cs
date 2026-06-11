@@ -21,6 +21,8 @@ public class User
   public string Description { get; set; } = string.Empty;
   [Required]
   public string Name { get; set; } = string.Empty;
+  [Required]
+  public string Slug { get; set; } = string.Empty;
   public string WhatsappNumber { get; set; } = string.Empty;
   public int BusinessHoursId { get; set; }
   public BusinessHours? BusinessHours { get; set; }
