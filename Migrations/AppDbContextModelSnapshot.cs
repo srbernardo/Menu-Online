@@ -362,6 +362,10 @@ namespace MenuOnline.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
@@ -376,6 +380,9 @@ namespace MenuOnline.Migrations
                         .IsUnique();
 
                     b.HasIndex("BusinessHoursId")
+                        .IsUnique();
+
+                    b.HasIndex("Slug")
                         .IsUnique();
 
                     b.ToTable("Users");
