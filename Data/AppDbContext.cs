@@ -126,6 +126,8 @@ public class AppDbContext : DbContext
       e.Property(u => u.Status)
        .HasConversion<string>();
 
+      e.HasIndex(u => u.Slug).IsUnique();
+
       e.HasMany(u => u.Items)
        .WithOne(i => i.User)
        .HasForeignKey(i => i.UserId)
