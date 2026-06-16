@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "xunit": {
+      "source": "managedcode/dotnet-skills",
+      "sourceType": "github",
+      "skillPath": "catalog/Testing/xUnit/skills/xunit/SKILL.md",
+      "computedHash": "8680b8549c60bf061ed6eb60e2378a6eab62ec487914932186ed0ba625db9866"
+    }
+  }
+}
