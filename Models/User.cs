@@ -28,4 +28,6 @@ public class User
   public BusinessHours? BusinessHours { get; set; }
   public StatusUser Status { get; set; }
   public List<RateTime> RateTimes { get; set; } = new List<RateTime>();
+  public List<Category> Categories { get; set; } = new List<Category>();
+  public List<Extra> Extras { get; set; } = new List<Extra>();
 }

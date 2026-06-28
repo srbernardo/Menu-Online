@@ -51,6 +51,11 @@ public class AppDbContext : DbContext
 
     modelBuilder.Entity<Category>(e =>
     {
+      e.HasOne(c => c.User)
+       .WithMany(u => u.Categories)
+       .HasForeignKey(c => c.UserId)
+       .OnDelete(DeleteBehavior.Cascade);
+
       e.HasMany(c => c.Items);
     });
 
@@ -79,6 +84,14 @@ public class AppDbContext : DbContext
       e.HasOne(ie => ie.Extra)
        .WithMany(x => x.ItemExtras)
        .HasForeignKey(ie => ie.ExtraId)
+       .OnDelete(DeleteBehavior.Cascade);
+    });
+
+    modelBuilder.Entity<Extra>(e =>
+    {
+      e.HasOne(ext => ext.User)
+       .WithMany(u => u.Extras)
+       .HasForeignKey(ext => ext.UserId)
        .OnDelete(DeleteBehavior.Cascade);
     });
 

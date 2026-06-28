@@ -14,6 +14,8 @@ public class Extra
   public string Title { get; set; } = string.Empty;
   [Required, Column(TypeName = "decimal(18,2)")]
   public decimal Value { get; set; }
+  public int UserId { get; set; }
+  public User? User { get; set; }
 
   [NotMapped]
   public List<Item> Items => ItemExtras?.Select(ie => ie.Item!).ToList() ?? new List<Item>();
