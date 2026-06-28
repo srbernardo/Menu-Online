@@ -16,4 +16,15 @@ public static class ExtraMappers
       extraModel.Value
     );
   }
+
+  public static Extra ToExtraFromCreateDto(this UpsertExtraRequestDto dto)
+  {
+    return new Extra
+    {
+      Description = dto.Description,
+      Title = dto.Title,
+      Value = dto.Value,
+      UserId = dto.UserId
+    };
+  }
 }
