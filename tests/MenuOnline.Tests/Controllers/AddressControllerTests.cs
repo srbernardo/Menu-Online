@@ -37,7 +37,7 @@ public class AddressControllerTests
     }
 
     [Fact]
-    public async Task GetById_ExistingAddress_ReturnsOk()
+    public async Task GetByUser_Existing_ReturnsOk()
     {
         var dbName = Guid.NewGuid().ToString();
         using var context = CreateContext(dbName);
@@ -62,7 +62,7 @@ public class AddressControllerTests
 
         var controller = CreateController(context);
 
-        var result = await controller.GetByIdAsync(1);
+        var result = await controller.GetByUserAsync(1);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
         var dto = Assert.IsType<AddressDto>(okResult.Value);
@@ -79,14 +79,14 @@ public class AddressControllerTests
     }
 
     [Fact]
-    public async Task GetById_NonExistent_ReturnsNotFound()
+    public async Task GetByUser_NonExistent_ReturnsNotFound()
     {
         var dbName = Guid.NewGuid().ToString();
         using var context = CreateContext(dbName);
 
         var controller = CreateController(context);
 
-        var result = await controller.GetByIdAsync(999);
+        var result = await controller.GetByUserAsync(999);
 
         Assert.IsType<NotFoundResult>(result);
     }
