@@ -20,12 +20,12 @@ namespace MenuOnline.Controllers
             _logger = logger;
         }
 
-        [HttpGet("addresses/{id:int}")]
-        public async Task<IActionResult> GetByIdAsync(int id)
+        [HttpGet("addresses/user/{userId:int}")]
+        public async Task<IActionResult> GetByUserAsync(int userId)
         {
             var address = await _context.Addresses
                 .AsNoTracking()
-                .FirstOrDefaultAsync(a => a.Id == id);
+                .FirstOrDefaultAsync(a => a.UserId == userId);
 
             if (address == null)
                 return NotFound();
@@ -65,7 +65,7 @@ namespace MenuOnline.Controllers
                 await _context.Addresses.AddAsync(address);
                 await _context.SaveChangesAsync();
 
-                return CreatedAtAction(nameof(GetByIdAsync), new { id = address.Id }, address.ToAddressDto());
+                return CreatedAtAction(nameof(GetByUserAsync), new { userId = address.UserId }, address.ToAddressDto());
             }
             catch (Exception e)
             {

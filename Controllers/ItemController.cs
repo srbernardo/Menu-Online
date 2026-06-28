@@ -22,8 +22,8 @@ namespace MenuOnline.Controllers
 
     }
 
-    [HttpGet("items")]
-    public async Task<IActionResult> GetAllAsync(int userId)
+        [HttpGet("items/user/{userId:int}")]
+        public async Task<IActionResult> GetAllAsync(int userId)
     {
       var items = await _context.Items
         .Where(i => i.UserId == userId)
@@ -34,7 +34,7 @@ namespace MenuOnline.Controllers
       return Ok(items);
     }
 
-    [HttpPost("item")]
+        [HttpPost("items")]
     public async Task<IActionResult> CreateAsync([FromBody] UpsetItemRequestDto itemRequestDto)
     {
       using var transaction = await _context.Database.BeginTransactionAsync();
@@ -60,16 +60,6 @@ namespace MenuOnline.Controllers
 
         await _context.Items.AddAsync(newItem);
         await _context.SaveChangesAsync();
-        
-        if (extras.Count != 0)
-        {
-          var itemExtras = await _context.ItemExtras
-            .Where(ie => ie.ItemId == newItem.Id)
-            .ToListAsync();
-
-          _context.ItemExtras.RemoveRange(itemExtras);
-          await _context.SaveChangesAsync();
-        }
 
         foreach (var extra in extras)
         {
@@ -93,7 +83,7 @@ namespace MenuOnline.Controllers
       }     
     }
 
-    [HttpPut("item/{id:int}")]
+        [HttpPut("items/{id:int}")]
     public async Task<IActionResult> UpdateAsync([FromRoute] int id, [FromBody] UpsetItemRequestDto item)
     {
       using var transaction = await _context.Database.BeginTransactionAsync();
@@ -104,7 +94,7 @@ namespace MenuOnline.Controllers
         if (item == null)
           return BadRequest("Item vazio!");
 
-        var itemDb = await _context.Items.Include(i => i.Extras).FirstOrDefaultAsync(i => i.Id == id);
+        var itemDb = await _context.Items.Include(i => i.ItemExtras).FirstOrDefaultAsync(i => i.Id == id);
         if (itemDb == null)
           return NotFound();
 
@@ -142,16 +132,16 @@ namespace MenuOnline.Controllers
       }
     }
 
-    [HttpDelete("item/{id:int}")]
-    public async Task<IActionResult> DeleteAsync([FromRoute] int id)  
-    {
-      var itemDb = await _context.Items.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
-      if (itemDb == null)
-        return NotFound();
+        [HttpDelete("items/{id:int}")]
+        public async Task<IActionResult> DeleteAsync([FromRoute] int id)  
+        {
+            var itemDb = await _context.Items.FirstOrDefaultAsync(i => i.Id == id);
+            if (itemDb == null)
+                return NotFound();
 
-      _context.Items.Remove(itemDb);
-      await _context.SaveChangesAsync();
-      return Ok(itemDb);
-    } 
+            _context.Items.Remove(itemDb);
+            await _context.SaveChangesAsync();
+            return Ok(itemDb);
+        }
   }
 }
