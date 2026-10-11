@@ -6,7 +6,6 @@ namespace MenuOnline.Models;
 
 public class Item
 {
-  [Required]
   public Category? Category { get; set; }
   public int CategoryId { get; set; }
   public string Description { get; set; } = string.Empty;

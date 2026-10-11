@@ -1,4 +1,3 @@
-using System;
 using MenuOnline.Dtos.Extra;
 using MenuOnline.Models;
 
@@ -15,5 +14,15 @@ public static class ExtraMappers
       extraModel.Title,
       extraModel.Value
     );
+  }
+
+  public static Extra ToExtraFromDto(this UpsertExtraRequestDto dto)
+  {
+    return new Extra
+    {
+      Title = dto.Title,
+      Description = dto.Description ?? "",
+      Value = dto.Value
+    };
   }
 }

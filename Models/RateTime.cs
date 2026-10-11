@@ -7,7 +7,7 @@ public class RateTime
 {
   public int Id { get; set; }
   public string TimeInMinutes { get; set; } = string.Empty;
-  [Column(TypeName = "decimal(2,1)")]
+  [Column(TypeName = "decimal(6,2)")]
   public decimal Km { get; set; }
   [Column(TypeName = "decimal(18,2)")]
   public decimal Rate { get; set; }

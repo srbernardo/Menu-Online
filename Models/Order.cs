@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Data.Common;
 using MenuOnline.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +10,7 @@ public class Order
   public enum StatusOrder { Pending, InPreparation, Ready, Delivered }
 
   public int Id { get; set; }
-  public DateTime OrderDate { get; set; } = DateTime.Now;
+  public DateTime OrderDate { get; set; } = DateTime.UtcNow;
   public StatusOrder Status { get; set; }
   [Column(TypeName = "decimal(18,2)")]
   public decimal TotalAmount { get; set; }
@@ -31,12 +30,12 @@ public class Order
 
   public async Task<int> SetNumberAsync(AppDbContext db, CancellationToken ct = default)
   {
-    var start = DateTime.Today;
+    var start = DateTime.UtcNow.Date;
     var endInclusive = start.AddDays(1).AddTicks(-1);
 
     var last = await db.Orders
       .Where(o => o.UserId == this.UserId)
-      .Where(o => o.OrderDate >= start && o.OrderDate < endInclusive)
+      .Where(o => o.OrderDate >= start && o.OrderDate <= endInclusive)
       .MaxAsync(o => (int?)o.Number, ct) ?? 0;
 
     var next = last + 1;

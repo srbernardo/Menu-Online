@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:16
+    container_name: menuonline-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: host
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-9090}
+      POSTGRES_DB: menuonline
+    ports:
+      # 5433 no host para nao conflitar com um PostgreSQL local na 5432
+      - "5433:5432"
+    volumes:
+      - menuonline_pgdata:/var/lib/postgresql/data
+
+volumes:
+  menuonline_pgdata:
