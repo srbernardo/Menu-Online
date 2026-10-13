@@ -59,22 +59,17 @@ API REST de cardápio online/delivery em **ASP.NET Core (.NET 8)**, **EF Core 8*
 - Migration `InitialCreate` **aplicada** (12 tabelas criadas). Para novas: `dotnet ef migrations add <Nome>` e `dotnet ef database update`.
 - O compose aceita `DB_PASSWORD` por variável de ambiente (padrão `9090`).
 
-## Teste de fumaça (executado com a API rodando contra o Postgres)
+## Fase 1 — Vitrine agregada (concluída em 2026-10-13)
 
-Todos passaram: user sem endereço (400), criação de user com endereço, e-mail duplicado (409), business hours, category, extra, item com extras, listagem, PUT de item, client e endereço do client, pedido (itens repetidos somados, total 71,00 = 3 × 22 + 5), numeração sequencial (1, 2), avanço de status, status retroativo (400), e os bloqueios 409 de excluir item vendido, pedido não pendente e user com pedidos. O banco foi limpo depois do teste.
+Endpoint único para o front (`menu-online-web/src/services/menuApi.ts`):
 
-Bug encontrado e corrigido no teste: os DTOs usavam `[property: Required]` em records, o que gera erro 500 em runtime. Passaram a usar o atributo direto no parâmetro.
+- **`GET /api/menu/{slug}`** (`MenuController`): retorna loja + cardápio em uma chamada, no formato exato do contrato do front (`RestaurantMenu`). Slug case-insensitive, `404` se não existir, `categories: []` se a loja não tem itens.
+- **`PATCH /api/user/{id}/store-open`** (`{isOpen: bool}`): toggle manual de aberto/fechado da loja.
+- Novos campos no `User` (migration `AddStorefrontFields`): `Slug` (único), `Phone`, `CoverUrl`, `LogoUrl`, `IsOpen`. `UserDto`, create e update passam a trafegar esses campos; slug com regex `^[a-z0-9-]+$` e checagem de unicidade (409).
+- **`deliveryFee` calculado do `RateTime`**: a vitrine exibe a menor taxa da tabela da loja ("a partir de"); sem tabela, `0` (grátis). O cálculo por distância/endereço no pedido continua pendente.
+- **CORS**: política `Frontend` liberando `http://localhost:5173` e `http://127.0.0.1:5173` em Development.
+- **Seed** (`Data/DbSeeder.cs`, roda no startup em Development se não houver usuários): loja `burgerfirst` (Burger First, aberta) com endereço, horário de funcionamento, 3 faixas de entrega (R$ 5/8/12), 5 categorias, 3 extras e 14 itens com imagens picsum (mesmas seeds do mock do front). Senha: `loja123456`.
 
-## Pendências
+Teste de fumaça (API contra o Postgres do docker): menu 200 com 5 categorias e 14 itens, extras do X-Burger corretos, `deliveryFee` 5, `404` para slug inexistente, toggle off/on refletindo no menu, slug duplicado 409, header `Access-Control-Allow-Origin` presente. Build com 0 erros/avisos.
 
-- [ ] **Senha antiga no histórico do git**: `Password=9090` continua nos commits antigos. Trocar a senha do banco em uso real.
-- [ ] **Autenticação/autorização** (JWT + login): hoje qualquer cliente acessa qualquer `userId`. `User.PasswordHash` já é gravado com hash, mas ainda não há login.
-- [ ] Testes automatizados (nenhum projeto de testes; só o teste de fumaça manual acima).
-- [ ] Cálculo automático da taxa de entrega a partir de `RateTime` (hoje `DeliveryFee` vem no request).
-- [ ] Validação de formato de horários em `BusinessHours` (strings livres) e de CEP.
-- [ ] Concorrência na numeração de pedidos (`SetNumberAsync` pode repetir número em requisições simultâneas; considerar índice único + retry).
-- [ ] Decidir se `opencode.json` no projeto deve ser versionado.
-
-## Observação sobre o `dotnet ef`
-
-Rodar `dotnet ef` com o `dotnet.exe` do Windows direto em caminho `\\wsl.localhost\...` trava. Rode a partir de uma cópia do projeto em disco Windows, ou instale o .NET SDK dentro do WSL.
+## Teste de fumaça (original, controllers por recurso)
