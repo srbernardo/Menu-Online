@@ -135,6 +135,7 @@ public class AppDbContext : DbContext
       e.Property(u => u.Role).HasConversion<string>();
       e.Property(u => u.Status).HasConversion<string>();
       e.HasIndex(u => u.Email).IsUnique();
+      e.HasIndex(u => u.Slug).IsUnique();
     });
   }
 }

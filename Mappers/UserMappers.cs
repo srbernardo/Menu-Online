@@ -12,13 +12,21 @@ public static class UserMappers
     (
       model.Id,
       model.Name,
+      model.Slug,
       model.Email,
       model.Description,
       model.WhatsappNumber,
+      model.Phone,
+      model.CoverUrl,
+      model.LogoUrl,
+      model.IsOpen,
       model.Role,
       model.Status,
       model.Address?.ToAddressDto(),
       model.BusinessHours?.ToBusinessHoursDto()
     );
   }
+
+  public static string NormalizeSlug(string slug) =>
+    slug.Trim().ToLowerInvariant();
 }
