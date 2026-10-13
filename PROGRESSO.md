@@ -72,4 +72,8 @@ Endpoint único para o front (`menu-online-web/src/services/menuApi.ts`):
 
 Teste de fumaça (API contra o Postgres do docker): menu 200 com 5 categorias e 14 itens, extras do X-Burger corretos, `deliveryFee` 5, `404` para slug inexistente, toggle off/on refletindo no menu, slug duplicado 409, header `Access-Control-Allow-Origin` presente. Build com 0 erros/avisos.
 
-## Teste de fumaça (original, controllers por recurso)
+## Imagens semânticas (2026-10-13)
+
+Troca das imagens aleatórias (picsum) por fotos gastronômicas profissionais (Unsplash, URLs verificadas uma a uma com HTTP 200). Antes houve uma passada com Wikimedia Commons, substituída por não ter qualidade visual adequada: capa (smash + fritas), logo (cheeseburger), 14 itens com foto (antes 4 usavam placeholder). `DbSeeder.cs` e `mockMenu.ts` usam as mesmas URLs; linhas existentes do banco atualizadas via SQL (sem nova migration, só dados).
+
+## Teste de fumaça (original
