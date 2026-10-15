@@ -76,4 +76,18 @@ Teste de fumaça (API contra o Postgres do docker): menu 200 com 5 categorias e 
 
 Troca das imagens aleatórias (picsum) por fotos gastronômicas profissionais (Unsplash, URLs verificadas uma a uma com HTTP 200). Antes houve uma passada com Wikimedia Commons, substituída por não ter qualidade visual adequada: capa (smash + fritas), logo (cheeseburger), 14 itens com foto (antes 4 usavam placeholder). `DbSeeder.cs` e `mockMenu.ts` usam as mesmas URLs; linhas existentes do banco atualizadas via SQL (sem nova migration, só dados).
 
+## Assets locais (2026-10-13)
+
+Pasta `Assets/seed/` versionada no repo com as 16 fotos (~2MB). `Program.cs` serve `Assets/` em `/uploads` via Static Files (futuros uploads de lojas irão para `wwwroot/uploads`, ignorado pelo git). `PublicBaseUrl` em `appsettings.Development.json` monta as URLs absolutas (front está em outra porta). `DbSeeder` grava URLs locais e converte linhas antigas com URLs remotas conhecidas (picsum/wikimedia/unsplash) — sem migration, só dados. Verificado: menu com 16/16 URLs locais, imagem servida com bytes idênticos ao arquivo do repo.
+
+## Media library estilo ActiveStorage (2026-10-15)
+
+Tabelas `MediaBlob` (Key única, checksum SHA256) + `MediaAttachment` (única por dono+finalidade, cascade para o blob) — espelho de `active_storage_blobs/attachments`. `MediaService` centraliza validação (só imagens jpg/png/webp/gif, máx 5MB), sharding da chave no disco (`wwwroot/uploads/ab/cd/chave.ext`, ignorado pelo git) e atualização da coluna de URL do dono, então todas as leituras existentes passam a exibir o upload sem mudança.
+
+- `POST /api/upload` (multipart: file, recordType=Item|User, recordId, name=photo|cover|logo): cria/substitui (apaga arquivo+blob anterior) e devolve 201 com URL pública.
+- `GET /api/upload/{blobId}`: metadados. `DELETE /api/upload/{tipo}/{id}/{nome}`: purge (limpa a coluna do dono).
+- Excluir item/usuário faz purge dos anexos.
+- Smoke test (11 casos, todos OK): upload, reflexo no item/menu/user, metadados, replace com 404 na URL antiga, capa, 400 (txt, triple inválida, oversize), 404 (item inexistente), purge com limpeza da coluna.
+- Migration `AddMediaLibrary` aplicada.
+
 ## Teste de fumaça (original
