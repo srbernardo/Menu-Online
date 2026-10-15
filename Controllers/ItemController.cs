@@ -2,6 +2,7 @@ using MenuOnline.Data;
 using MenuOnline.Dtos.Item;
 using MenuOnline.Mappers;
 using MenuOnline.Models;
+using MenuOnline.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,11 +14,13 @@ namespace MenuOnline.Controllers
   {
     private readonly AppDbContext _context;
     private readonly ILogger<ItemController> _logger;
+    private readonly MediaService _media;
 
-    public ItemController(AppDbContext context, ILogger<ItemController> logger)
+    public ItemController(AppDbContext context, ILogger<ItemController> logger, MediaService media)
     {
       _context = context;
       _logger = logger;
+      _media = media;
     }
 
     private IQueryable<Item> ItemsWithRelations() =>
@@ -131,6 +134,7 @@ namespace MenuOnline.Controllers
       if (await _context.ItemOrders.AnyAsync(io => io.ItemId == id))
         return Conflict("Item já foi vendido em pedidos e não pode ser removido.");
 
+      await _media.PurgeOwnerAsync(MediaNames.Item, id);
       _context.Items.Remove(itemDb);
       await _context.SaveChangesAsync();
       return NoContent();

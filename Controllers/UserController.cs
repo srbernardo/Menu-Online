@@ -2,6 +2,7 @@ using MenuOnline.Data;
 using MenuOnline.Dtos.User;
 using MenuOnline.Mappers;
 using MenuOnline.Models;
+using MenuOnline.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,12 +15,14 @@ namespace MenuOnline.Controllers
   {
     private readonly AppDbContext _context;
     private readonly ILogger<UserController> _logger;
+    private readonly MediaService _media;
     private static readonly PasswordHasher<User> _hasher = new();
 
-    public UserController(AppDbContext context, ILogger<UserController> logger)
+    public UserController(AppDbContext context, ILogger<UserController> logger, MediaService media)
     {
       _context = context;
       _logger = logger;
+      _media = media;
     }
 
     private IQueryable<User> UsersWithRelations() =>
@@ -160,6 +163,7 @@ namespace MenuOnline.Controllers
       if (await _context.Orders.AnyAsync(o => o.UserId == id))
         return Conflict("Usuário possui pedidos e não pode ser removido. Inative-o (Status).");
 
+      await _media.PurgeOwnerAsync(MediaNames.User, id);
       _context.Users.Remove(user);
       await _context.SaveChangesAsync();
       return NoContent();
