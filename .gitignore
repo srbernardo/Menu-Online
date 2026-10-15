@@ -96,3 +96,6 @@ yarn-error.log
 
 # Windows Installer
 Thumbs.db
+
+# Guia local de desenvolvimento (fora do git)
+DEV-LOCAL.md
