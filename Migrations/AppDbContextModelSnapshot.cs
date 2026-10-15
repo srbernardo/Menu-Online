@@ -269,6 +269,77 @@ namespace MenuOnline.Migrations
                     b.ToTable("ItemOrders");
                 });
 
+            modelBuilder.Entity("MenuOnline.Models.MediaAttachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("BlobId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("RecordId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("RecordType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlobId");
+
+                    b.HasIndex("RecordType", "RecordId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("MediaAttachments");
+                });
+
+            modelBuilder.Entity("MenuOnline.Models.MediaBlob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("ByteSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Checksum")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("MediaBlobs");
+                });
+
             modelBuilder.Entity("MenuOnline.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -492,6 +563,17 @@ namespace MenuOnline.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("MenuOnline.Models.MediaAttachment", b =>
+                {
+                    b.HasOne("MenuOnline.Models.MediaBlob", "Blob")
+                        .WithMany("Attachments")
+                        .HasForeignKey("BlobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Blob");
+                });
+
             modelBuilder.Entity("MenuOnline.Models.Order", b =>
                 {
                     b.HasOne("MenuOnline.Models.Client", "Client")
@@ -551,6 +633,11 @@ namespace MenuOnline.Migrations
                     b.Navigation("ItemExtras");
 
                     b.Navigation("ItemOrders");
+                });
+
+            modelBuilder.Entity("MenuOnline.Models.MediaBlob", b =>
+                {
+                    b.Navigation("Attachments");
                 });
 
             modelBuilder.Entity("MenuOnline.Models.Order", b =>
