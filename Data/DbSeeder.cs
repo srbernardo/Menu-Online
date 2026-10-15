@@ -6,35 +6,50 @@ using Microsoft.EntityFrameworkCore;
 namespace MenuOnline.Data;
 
 // Cria a loja de exemplo na primeira execucao em Development (idempotente).
+// Imagens: arquivos versionados em Assets/seed, servidos em /uploads/seed.
 public static class DbSeeder
 {
-  public static async Task SeedAsync(AppDbContext db)
-  {
-    if (await db.Users.AnyAsync())
-      return;
+  private static readonly string[] Keys =
+    ["cover", "logo", "xburger", "xbacon", "smash", "veggie", "fries",
+     "onion", "nuggets", "soda", "juice", "water", "shake1", "shake2", "brownie", "torta"];
 
-    // Fotos profissionais (Unsplash) compativeis com cada item.
-    const string U = "https://images.unsplash.com";
-    const string P = "?q=80&auto=format&fit=crop";
-    var img = new Dictionary<string, string>
+  // Trechos que identificam as URLs remotas antigas do seed (picsum, wikimedia, unsplash).
+  private static readonly Dictionary<string, string[]> RemoteMarkers = new()
+  {
+    ["cover"] = ["burgerfirst-cover", "Double_Smash_Burger_with_Fries", "1761315414039-3955a6252f58"],
+    ["logo"] = ["burgerfirst-logo", "Cheeseburger.jpg", "1568901346375-23c9450c58cd"],
+    ["xburger"] = ["/seed/xburger/", "NCI_Visuals_Food_Hamburger", "1586190848861-99aa4a171e90"],
+    ["xbacon"] = ["/seed/xbacon/", "Double_Bacon_Cheeseburger", "1700835880280-a0184101b9c8"],
+    ["smash"] = ["/seed/smash/", "Smash_burger_-_Cambridge", "1607013251379-e6eecfffe234"],
+    ["veggie"] = ["ultimate_veggie_burger", "1520072959219-c595dc870360"],
+    ["fries"] = ["/seed/fries/", "Cajun_fries", "1630384060421-cb20d0e0649d"],
+    ["onion"] = ["/seed/onion/", "Onion_rings", "1766589152292-3c052f0d87aa"],
+    ["nuggets"] = ["Chicken_nuggets_on_a_plate", "1605291581926-df4bf7ee3e89"],
+    ["soda"] = ["/seed/soda/", "Beverage_cans", "1622483767028-3f66f32aef97"],
+    ["juice"] = ["/seed/juice/", "Orange_juice_1_edit1", "1613478223719-2ab802602423"],
+    ["water"] = ["Bottle_of_Water", "1523362628745-0c100150b504"],
+    ["shake1"] = ["/seed/shake1/", "Chocolate_milkshake", "1572490122747-3968b75cc699"],
+    ["shake2"] = ["/seed/shake2/", "Strawberry_milk_shake", "1579954115545-a95591f28bfc"],
+    ["brownie"] = ["/seed/brownie/", "Chocolate_brownies_without_table", "1606313564200-e75d5e30476c"],
+    ["torta"] = ["Lemon_Meringue_Pie", "1785695797215-4345de8ab06c"]
+  };
+
+  private static string? LocalKeyForUrl(string? url)
+  {
+    if (string.IsNullOrWhiteSpace(url) || !url.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+      return null;
+    foreach (var (key, markers) in RemoteMarkers)
+      if (markers.Any(url.Contains))
+        return key;
+    return null;
+  }
+
+  public static async Task SeedAsync(AppDbContext db, string publicBaseUrl)
+  {
+    var img = Keys.ToDictionary(k => k, k => $"{publicBaseUrl.TrimEnd('/')}/uploads/seed/{k}.jpg");
+
+    if (!await db.Users.AnyAsync())
     {
-      ["cover"] = $"{U}/photo-1761315414039-3955a6252f58{P}&w=1600",
-      ["logo"] = $"{U}/photo-1568901346375-23c9450c58cd{P}&w=800",
-      ["xburger"] = $"{U}/photo-1586190848861-99aa4a171e90{P}&w=800",
-      ["xbacon"] = $"{U}/photo-1700835880280-a0184101b9c8{P}&w=800",
-      ["smash"] = $"{U}/photo-1607013251379-e6eecfffe234{P}&w=800",
-      ["veggie"] = $"{U}/photo-1520072959219-c595dc870360{P}&w=800",
-      ["fries"] = $"{U}/photo-1630384060421-cb20d0e0649d{P}&w=800",
-      ["onion"] = $"{U}/photo-1766589152292-3c052f0d87aa{P}&w=800",
-      ["nuggets"] = $"{U}/photo-1605291581926-df4bf7ee3e89{P}&w=800",
-      ["soda"] = $"{U}/photo-1622483767028-3f66f32aef97{P}&w=800",
-      ["juice"] = $"{U}/photo-1613478223719-2ab802602423{P}&w=800",
-      ["water"] = $"{U}/photo-1523362628745-0c100150b504{P}&w=800",
-      ["shake1"] = $"{U}/photo-1572490122747-3968b75cc699{P}&w=800",
-      ["shake2"] = $"{U}/photo-1579954115545-a95591f28bfc{P}&w=800",
-      ["brownie"] = $"{U}/photo-1606313564200-e75d5e30476c{P}&w=800",
-      ["torta"] = $"{U}/photo-1785695797215-4345de8ab06c{P}&w=800"
-    };
     var hasher = new PasswordHasher<User>();
 
     var user = new User
@@ -123,5 +138,27 @@ public static class DbSeeder
     await db.Extras.AddRangeAsync(bacon, cheddar, ovo);
     await db.Items.AddRangeAsync(items);
     await db.SaveChangesAsync();
+    return;
+    }
+
+    // Banco já populado: converte apenas URLs remotas conhecidas do seed para locais.
+    var dirty = false;
+
+    foreach (var u in await db.Users.ToListAsync())
+    {
+      var coverKey = LocalKeyForUrl(u.CoverUrl);
+      if (coverKey != null && u.CoverUrl != img[coverKey]) { u.CoverUrl = img[coverKey]; dirty = true; }
+      var logoKey = LocalKeyForUrl(u.LogoUrl);
+      if (logoKey != null && u.LogoUrl != img[logoKey]) { u.LogoUrl = img[logoKey]; dirty = true; }
+    }
+
+    foreach (var i in await db.Items.Where(i => i.ImageUrl != "").ToListAsync())
+    {
+      var key = LocalKeyForUrl(i.ImageUrl);
+      if (key != null && i.ImageUrl != img[key]) { i.ImageUrl = img[key]; dirty = true; }
+    }
+
+    if (dirty)
+      await db.SaveChangesAsync();
   }
 }
