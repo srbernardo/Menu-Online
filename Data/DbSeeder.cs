@@ -138,7 +138,18 @@ public static class DbSeeder
     await db.Extras.AddRangeAsync(bacon, cheddar, ovo);
     await db.Items.AddRangeAsync(items);
     await db.SaveChangesAsync();
-    return;
+    }
+
+    // Cliente de exemplo para testar o login por telefone em Development.
+    if (!await db.Clients.AnyAsync())
+    {
+      await db.Clients.AddAsync(new Client
+      {
+        Name = "Cliente Demo",
+        WhatsappNumber = "(11) 98888-7777",
+        Email = "cliente.demo@exemplo.com"
+      });
+      await db.SaveChangesAsync();
     }
 
     // Banco já populado: converte apenas URLs remotas conhecidas do seed para locais.

@@ -3,6 +3,7 @@ using MenuOnline.Dtos.Address;
 using MenuOnline.Dtos.Client;
 using MenuOnline.Mappers;
 using MenuOnline.Models;
+using MenuOnline.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -50,6 +51,13 @@ namespace MenuOnline.Controllers
     [HttpPost("client")]
     public async Task<IActionResult> CreateAsync([FromBody] UpsertClientRequestDto dto)
     {
+      var phone = PhoneNumber.Normalize(dto.WhatsappNumber);
+      if (!PhoneNumber.IsValid(phone))
+        return BadRequest("Número de telefone inválido!");
+
+      if (await _context.Clients.AnyAsync(c => c.PhoneNormalized == phone))
+        return Conflict("Já existe um cliente com este número de telefone!");
+
       var client = dto.ToClientFromDto();
       await _context.Clients.AddAsync(client);
       await _context.SaveChangesAsync();
@@ -62,6 +70,13 @@ namespace MenuOnline.Controllers
       var client = await _context.Clients.Include(c => c.Addresses).FirstOrDefaultAsync(c => c.Id == id);
       if (client == null)
         return NotFound();
+
+      var phone = PhoneNumber.Normalize(dto.WhatsappNumber);
+      if (!PhoneNumber.IsValid(phone))
+        return BadRequest("Número de telefone inválido!");
+
+      if (await _context.Clients.AnyAsync(c => c.PhoneNormalized == phone && c.Id != id))
+        return Conflict("Já existe um cliente com este número de telefone!");
 
       dto.ApplyTo(client);
       await _context.SaveChangesAsync();

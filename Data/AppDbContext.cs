@@ -58,6 +58,14 @@ public class AppDbContext : DbContext
 
     modelBuilder.Entity<Client>(e =>
     {
+      // Login por telefone: mesma numeracao com ou sem mascara.
+      e.Property(c => c.PhoneNormalized)
+       .HasComputedColumnSql("regexp_replace(\"WhatsappNumber\", '[^0-9]', '', 'g')", stored: true);
+
+      e.HasIndex(c => c.PhoneNormalized)
+       .IsUnique()
+       .HasFilter("\"PhoneNormalized\" <> ''");
+
       // Nao apaga pedidos (historico) ao apagar o cliente
       e.HasMany(c => c.Orders)
        .WithOne(o => o.Client)
