@@ -1,6 +1,6 @@
 # Menu-Online - Progresso do Projeto
 
-> Atualizado em 2026-10-11. O projeto compila sem erros/avisos (`dotnet build`) e a migration inicial foi gerada a partir do modelo.
+> Atualizado em 2026-10-27. O projeto compila sem erros/avisos (`dotnet build`) e as migrations estão aplicadas.
 
 ## Visão geral
 
@@ -90,4 +90,14 @@ Tabelas `MediaBlob` (Key única, checksum SHA256) + `MediaAttachment` (única po
 - Smoke test (11 casos, todos OK): upload, reflexo no item/menu/user, metadados, replace com 404 na URL antiga, capa, 400 (txt, triple inválida, oversize), 404 (item inexistente), purge com limpeza da coluna.
 - Migration `AddMediaLibrary` aplicada.
 
-## Teste de fumaça (original
+## Login do cliente por telefone (2026-10-27)
+
+- `Client.PhoneNormalized`: coluna calculada no Postgres (somente dígitos) + índice único parcial; migration `AddClientPhoneNormalized` aplicada.
+- `GET /api/auth/client/lookup?phone=`: retorna `{ exists, name }` para o front autocompletar o nome enquanto digita.
+- `POST /api/auth/client/login` (body `{ phone }`): localiza o cliente pelo telefone e grava o cookie **HttpOnly** `menuonline.client` (30 dias, sliding). Sem JWT. Retorna o `ClientDto` com endereços.
+- `GET /api/auth/client/me` e `POST /api/auth/client/logout`: exigem sessão; sem cookie a API responde `401` (não redireciona).
+- CORS da vitrine passou a usar `AllowCredentials` para o fetch cross-origin do Vite enviar o cookie.
+- `POST/PUT /api/client`: telefone validado (10 ou 11 dígitos, com ou sem máscara) e único (`409`).
+- Seed de Development: cliente demo **Cliente Demo** / telefone `(11) 98888-7777`.
+- Front: "Meus pedidos" abre o login em **modal** sobre a vitrine; após autenticar, vai para `/:slug/pedidos` e exibe os dados do cliente.
+- Smoke test: lookup com/sem máscara, login 200/404, cookie HttpOnly, `me` 200/401, logout, duplicado 409, inválido 400, preflight CORS com credenciais.

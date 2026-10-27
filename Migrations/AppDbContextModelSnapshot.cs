@@ -162,11 +162,21 @@ namespace MenuOnline.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PhoneNormalized")
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("text")
+                        .HasComputedColumnSql("regexp_replace(\"WhatsappNumber\", '[^0-9]', '', 'g')", true);
+
                     b.Property<string>("WhatsappNumber")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PhoneNormalized")
+                        .IsUnique()
+                        .HasFilter("\"PhoneNormalized\" <> ''");
 
                     b.ToTable("Clients");
                 });
