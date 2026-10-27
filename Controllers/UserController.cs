@@ -2,6 +2,7 @@ using MenuOnline.Data;
 using MenuOnline.Dtos.User;
 using MenuOnline.Mappers;
 using MenuOnline.Models;
+using MenuOnline.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,12 +15,14 @@ namespace MenuOnline.Controllers
   {
     private readonly AppDbContext _context;
     private readonly ILogger<UserController> _logger;
+    private readonly MediaService _media;
     private static readonly PasswordHasher<User> _hasher = new();
 
-    public UserController(AppDbContext context, ILogger<UserController> logger)
+    public UserController(AppDbContext context, ILogger<UserController> logger, MediaService media)
     {
       _context = context;
       _logger = logger;
+      _media = media;
     }
 
     private IQueryable<User> UsersWithRelations() =>
@@ -50,12 +53,20 @@ namespace MenuOnline.Controllers
       if (await _context.Users.AnyAsync(u => u.Email == email))
         return Conflict("Já existe um usuário com esse e-mail.");
 
+      var slug = MenuOnline.Mappers.UserMappers.NormalizeSlug(dto.Slug);
+      if (await _context.Users.AnyAsync(u => u.Slug == slug))
+        return Conflict("Já existe uma loja com esse slug.");
+
       var user = new User
       {
         Name = dto.Name,
+        Slug = slug,
         Email = email,
         Description = dto.Description ?? "",
         WhatsappNumber = dto.WhatsappNumber ?? "",
+        Phone = dto.Phone ?? "",
+        CoverUrl = dto.CoverUrl ?? "",
+        LogoUrl = dto.LogoUrl ?? "",
         Role = dto.Role,
         Status = Models.User.StatusUser.Active,
         Address = dto.Address.ToAddressFromDto(),
@@ -88,10 +99,18 @@ namespace MenuOnline.Controllers
       if (await _context.Users.AnyAsync(u => u.Email == email && u.Id != id))
         return Conflict("Já existe um usuário com esse e-mail.");
 
+      var slug = MenuOnline.Mappers.UserMappers.NormalizeSlug(dto.Slug);
+      if (await _context.Users.AnyAsync(u => u.Slug == slug && u.Id != id))
+        return Conflict("Já existe uma loja com esse slug.");
+
       user.Name = dto.Name;
+      user.Slug = slug;
       user.Email = email;
       user.Description = dto.Description ?? "";
       user.WhatsappNumber = dto.WhatsappNumber ?? "";
+      user.Phone = dto.Phone ?? "";
+      user.CoverUrl = dto.CoverUrl ?? "";
+      user.LogoUrl = dto.LogoUrl ?? "";
       user.Role = dto.Role;
       user.Status = dto.Status;
 
@@ -121,6 +140,19 @@ namespace MenuOnline.Controllers
       return Ok(user.ToUserDto());
     }
 
+    // Toggle manual de aberto/fechado da loja.
+    [HttpPatch("user/{id:int}/store-open")]
+    public async Task<IActionResult> UpdateStoreOpenAsync([FromRoute] int id, [FromBody] UpdateStoreOpenRequestDto dto)
+    {
+      var user = await UsersWithRelations().FirstOrDefaultAsync(u => u.Id == id);
+      if (user == null)
+        return NotFound();
+
+      user.IsOpen = dto.IsOpen;
+      await _context.SaveChangesAsync();
+      return Ok(user.ToUserDto());
+    }
+
     [HttpDelete("user/{id:int}")]
     public async Task<IActionResult> DeleteAsync([FromRoute] int id)
     {
@@ -131,6 +163,7 @@ namespace MenuOnline.Controllers
       if (await _context.Orders.AnyAsync(o => o.UserId == id))
         return Conflict("Usuário possui pedidos e não pode ser removido. Inative-o (Status).");
 
+      await _media.PurgeOwnerAsync(MediaNames.User, id);
       _context.Users.Remove(user);
       await _context.SaveChangesAsync();
       return NoContent();

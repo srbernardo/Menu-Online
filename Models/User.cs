@@ -16,7 +16,15 @@ public class User
   public string Description { get; set; } = string.Empty;
   [Required]
   public string Name { get; set; } = string.Empty;
+  // Identificador publico da vitrine: menu-online.com/{slug}
+  [Required]
+  public string Slug { get; set; } = string.Empty;
   public string WhatsappNumber { get; set; } = string.Empty;
+  public string Phone { get; set; } = string.Empty;
+  public string CoverUrl { get; set; } = string.Empty;
+  public string LogoUrl { get; set; } = string.Empty;
+  // Toggle manual da loja: aberto/fechado
+  public bool IsOpen { get; set; }
   public StatusUser Status { get; set; }
 
   public List<Order> Orders { get; set; } = new List<Order>();

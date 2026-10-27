@@ -17,6 +17,8 @@ public class AppDbContext : DbContext
   public DbSet<ItemExtra> ItemExtras { get; set; }
   public DbSet<ItemOrder> ItemOrders { get; set; }
   public DbSet<Item> Items { get; set; }
+  public DbSet<MediaAttachment> MediaAttachments { get; set; }
+  public DbSet<MediaBlob> MediaBlobs { get; set; }
   public DbSet<Order> Orders { get; set; }
   public DbSet<RateTime> RateTimes { get; set; }
   public DbSet<User> Users { get; set; }
@@ -135,6 +137,23 @@ public class AppDbContext : DbContext
       e.Property(u => u.Role).HasConversion<string>();
       e.Property(u => u.Status).HasConversion<string>();
       e.HasIndex(u => u.Email).IsUnique();
+      e.HasIndex(u => u.Slug).IsUnique();
+    });
+
+    modelBuilder.Entity<MediaBlob>(e =>
+    {
+      e.HasIndex(b => b.Key).IsUnique();
+    });
+
+    modelBuilder.Entity<MediaAttachment>(e =>
+    {
+      // Um anexo por dono + finalidade (equivale ao has_one_attached)
+      e.HasIndex(a => new { a.RecordType, a.RecordId, a.Name }).IsUnique();
+
+      e.HasOne(a => a.Blob)
+       .WithMany(b => b.Attachments)
+       .HasForeignKey(a => a.BlobId)
+       .OnDelete(DeleteBehavior.Cascade);
     });
   }
 }

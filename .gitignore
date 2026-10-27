@@ -98,3 +98,6 @@ yarn-error.log
 Thumbs.db
 appsettings.json
 appsettings.Development.json
+
+# Guia local de desenvolvimento (fora do git)
+DEV-LOCAL.md
